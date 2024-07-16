@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:latest
+    environment:
+      DB_SERVER_HOST: "mysql-server"
+      MYSQL_DATABASE: "zabbix"
+      MYSQL_USER: "zabbix"
+      MYSQL_PASSWORD: "zabbix"
+      MYSQL_ROOT_PASSWORD: "root"
+    ports:
+      - "10051:10051"
+    depends_on:
+      - mysql-server
+    networks:
+      - zabbix-net
+
+  mysql-server:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: "zabbix"
+      MYSQL_USER: "zabbix"
+      MYSQL_PASSWORD: "zabbix"
+      MYSQL_ROOT_PASSWORD: "root"
+    volumes:
+      - zabbix-mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - zabbix-net
+
+  zabbix-web-nginx-mysql:
+    image: zabbix/zabbix-web-nginx-mysql:latest
+    environment:
+      DB_SERVER_HOST: "mysql-server"
+      MYSQL_DATABASE: "zabbix"
+      MYSQL_USER: "zabbix"
+      MYSQL_PASSWORD: "zabbix"
+      ZBX_SERVER_HOST: "zabbix-server"
+      PHP_TZ: "Europe/Moscow"
+    depends_on:
+      - mysql-server
+    ports:
+      - "6300:80"
+    networks:
+      - zabbix-net
+
+volumes:
+  zabbix-mysql:
+
+networks:
+  zabbix-net:
+    driver: bridge
